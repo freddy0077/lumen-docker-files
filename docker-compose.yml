@@ -1,0 +1,44 @@
+version: '3.9'
+services:
+  app:
+    container_name: ${APPNAME}
+    hostname: "${DOMAIN}" 
+    build:
+      context: .
+      target: '${ENV}'
+      args:
+        - ENV=${ENV}
+        - APPNAME=${APPNAME}
+        - DOMAIN=${DOMAIN}
+        - WORKDIR_USER=${WORKDIR_USER}
+        - WORKDIR_GROUP=${WORKDIR_GROUP}
+        - WORKDIRPATH=${WORKDIRPATH}
+    environment:
+      - PHP_EXTENSION_XDEBUG=1
+    volumes:
+      - '${SOURCEPATH}:/var/www'
+      - '${VOLUMESPATH}/fpm/logs/:/var/log/php7/'
+      - '${VOLUMESPATH}/nginx/logs/:/var/log/nginx/'
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - db_net
+ 
+  mysql:
+    image: mysql:8.0
+    container_name: "mysql" 
+    networks:
+      db_net:
+        aliases:
+          - "mysql.private"
+    environment:
+      MYSQL_DATABASE: '${APPNAME}'
+      MYSQL_ROOT_PASSWORD: 'root'
+    expose:
+      - '3306'
+    volumes:
+      - '${VOLUMESPATH}/mysql:/var/lib/mysql'
+
+networks:
+  db_net:
